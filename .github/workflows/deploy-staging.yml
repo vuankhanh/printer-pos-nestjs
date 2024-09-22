@@ -45,7 +45,6 @@ jobs:
         PROJECT_NAME=$(node -p "require('./package.json').name")
         DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
         echo "Creating .env file"
-        echo "NODE_ENV=production" > $DEPLOY_DIR/.env
         echo "DEV_APP_PORT=${{ secrets.DEV_APP_PORT }}" >> $DEPLOY_DIR/.env
         echo "PRO_APP_PORT=${{ secrets.PRO_APP_PORT }}" >> $DEPLOY_DIR/.env
         echo "PRINTER_NAME=${{ secrets.PRINTER_NAME }}" >> $DEPLOY_DIR/.env
@@ -68,6 +67,8 @@ jobs:
     - name: Check and start pm2 process
       run: |
         PROJECT_NAME=$(node -p "require('./package.json').name")
-        if ! pm2 list | grep -q $PROJECT_NAME; then
+        if pm2 list | grep -q $PROJECT_NAME; then
+          pm2 reload $PROJECT_NAME
+        else
           pm2 start "npm run start:prod:linux" --name $PROJECT_NAME
         fi
