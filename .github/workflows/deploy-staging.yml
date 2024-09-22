@@ -26,7 +26,7 @@ jobs:
 
     - name: Copy files to deployment directory
       run: |
-        PROJECT_NAME=$(jq -r .name < package.json)
+        PROJECT_NAME=$(node -p "require('./package.json').name")
         DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
         mkdir -p $DEPLOY_DIR
         cp -r dist $DEPLOY_DIR
@@ -35,11 +35,15 @@ jobs:
 
     - name: Install production dependencies
       run: |
+        PROJECT_NAME=$(node -p "require('./package.json').name")
+        DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
         cd $DEPLOY_DIR
         npm install --only=production
 
     - name: Create .env file
       run: |
+        PROJECT_NAME=$(node -p "require('./package.json').name")
+        DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
         echo "Creating .env file"
         echo "NODE_ENV=production" > $DEPLOY_DIR/.env
         echo "DEV_APP_PORT=${{ secrets.DEV_APP_PORT }}" >> $DEPLOY_DIR/.env
@@ -63,7 +67,7 @@ jobs:
 
     - name: Check and start pm2 process
       run: |
-        PROJECT_NAME=$(jq -r .name < package.json)
+        PROJECT_NAME=$(node -p "require('./package.json').name")
         if ! pm2 list | grep -q $PROJECT_NAME; then
           pm2 start "npm run start:prod:linux" --name $PROJECT_NAME
         fi
