@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: vak-TP550LA
+    runs-on: [vak-TP550LA, self-hosted, linux, x64, staging]
 
     steps:
     - name: Checkout repository
