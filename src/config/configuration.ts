@@ -29,7 +29,7 @@ export default () => {
 
   const folder = {
     temporary: join(__dirname, '../..', process.env.TEMPORARY_FOLDER).replace(/\\/g, "/"),
-    assets: join(__dirname, '../..', 'src', process.env.ASSETS_FOLDER).replace(/\\/g, "/"),
+    assets: join(__dirname, '../..', process.env.ASSETS_FOLDER).replace(/\\/g, "/"),
   }
 
   const vietQR = {

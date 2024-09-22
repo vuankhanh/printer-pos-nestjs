@@ -30,6 +30,7 @@ jobs:
         DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
         mkdir -p $DEPLOY_DIR
         cp -r dist $DEPLOY_DIR
+        cp -r ASSETS $DEPLOY_DIR
         cp package.json $DEPLOY_DIR
         cp package-lock.json $DEPLOY_DIR
 
