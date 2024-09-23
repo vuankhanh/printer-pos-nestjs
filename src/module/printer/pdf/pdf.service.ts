@@ -34,8 +34,7 @@ export class PdfService {
     try {
 
       const mappedHtml = await this.htmlService.mapToHtml(data, html);
-
-      FileUtil.write('mapped.html', mappedHtml);
+      
       // Thiết lập nội dung HTML cho trang
       await page.setContent(mappedHtml);
       
