@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as print from 'pdf-to-printer';
+import * as os from 'os';
+import { exec } from 'child_process';
 import { PdfService } from './pdf/pdf.service';
 import { Template } from 'src/shared/interface/template.interface';
 import { FileUtil } from 'src/shared/utitl/file.util';
@@ -28,7 +30,33 @@ export class PrinterService {
     return result.buffer;
   }
 
-  private printPdf(pdfPath: string, printerName: string): Promise<void> {
+  private printPdf(pdfPath: string, printerName: string) {
+    const osType = os.type();
+    
+    if (osType === 'Windows_NT') {
+      return this.printPdfWindows(pdfPath, printerName);
+    } else if (osType === 'Linux' || osType === 'Darwin') {
+      return this.printPdfLinux(pdfPath, printerName);
+    } else {
+      return Promise.reject(new Error('Operating System not supported'));
+    }
+  }
+
+  printPdfWindows(pdfPath: string, printerName: string) {
     return print.print(pdfPath, { printer: printerName });
+  }
+
+  printPdfLinux(pdfPath: string, printerName: string) {
+    return new Promise((resolve, reject) => {
+      printerName = printerName.replace(/\s/g, '');
+      const command = `lp -d ${printerName} ${pdfPath}`
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          reject(`Error printing file: ${stderr}`);
+        } else {
+          resolve(stdout);
+        }
+      });
+    });
   }
 }
