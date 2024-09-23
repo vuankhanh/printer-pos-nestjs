@@ -77,10 +77,8 @@ jobs:
       run: |
         PROJECT_NAME=$(node -p "require('./package.json').name")
         if ! pm2 list | grep -q $PROJECT_NAME; then
-          echo "Không tìm thấy tiến trình PM2 với tên $PROJECT_NAME. Khởi động tiến trình mới."
           pm2 reload $PROJECT_NAME
         else
-          echo "Tìm thấy tiến trình PM2 với tên $PROJECT_NAME. Reload tiến trình."
           pm2 start "npm run start:prod:linux" --name $PROJECT_NAME
           pm2 save
         fi
