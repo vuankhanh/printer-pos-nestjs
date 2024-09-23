@@ -82,6 +82,8 @@ jobs:
         if ! pm2 list | grep -q $PROJECT_NAME; then
           pm2 reload $PROJECT_NAME
         else
+          DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
+          cd $DEPLOY_DIR
           pm2 start "npm run start:prod:linux" --name $PROJECT_NAME
           pm2 save
         fi
