@@ -80,4 +80,5 @@ jobs:
           pm2 reload $PROJECT_NAME
         else
           pm2 start "npm run start:prod:linux" --name $PROJECT_NAME
+          pm2 save
         fi
