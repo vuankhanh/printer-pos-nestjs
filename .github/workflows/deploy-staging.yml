@@ -24,12 +24,12 @@ jobs:
     - name: Build project
       run: npm run build
 
-    - name: Rename old project directory if exists
+    - name: Remove old project directory if exists
       run: |
         PROJECT_NAME=$(node -p "require('./package.json').name")
         DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
         if [ -d "$DEPLOY_DIR" ]; then
-          mv $DEPLOY_DIR "${DEPLOY_DIR}_old"
+          rm -rf "$PROJECT_DIR"
         fi
 
     - name: Copy files to deployment directory
