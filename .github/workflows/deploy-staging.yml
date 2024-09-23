@@ -29,7 +29,10 @@ jobs:
         PROJECT_NAME=$(node -p "require('./package.json').name")
         DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
         if [ -d "$DEPLOY_DIR" ]; then
-          rm -rf "$PROJECT_DIR"
+          echo "Directory exists, deleting..."
+          rm -rf "$DEPLOY_DIR"
+        else
+          echo "Directory does not exist."
         fi
 
     - name: Copy files to deployment directory
