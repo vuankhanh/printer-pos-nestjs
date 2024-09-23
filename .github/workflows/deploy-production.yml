@@ -1,0 +1,95 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, Linux, X64, production]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build project
+      run: npm run build
+
+    - name: Check and replace files
+      run: |
+        PROJECT_NAME=$(node -p "require('./package.json').name")
+        DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
+        if [ -d "$DEPLOY_DIR" ]; then
+          echo "Directory exists, deleting..."
+          rm -rf "$DEPLOY_DIR/dist"
+          rm -rf "$DEPLOY_DIR/node_modules"
+          rm -f "$DEPLOY_DIR/package.json"
+          rm -f "$DEPLOY_DIR/package-lock.json"
+          rm -f "$DEPLOY_DIR/.env"
+
+          echo "Directory exists, copying..."
+          cp -r dist $DEPLOY_DIR
+          cp package.json $DEPLOY_DIR
+          cp package-lock.json $DEPLOY_DIR
+
+        else
+          echo "Directory does not exist."
+          mkdir -p $DEPLOY_DIR
+          cp -r dist $DEPLOY_DIR
+          cp -r ASSETS $DEPLOY_DIR
+          cp package.json $DEPLOY_DIR
+          cp package-lock.json $DEPLOY_DIR
+        fi
+
+    - name: Install production dependencies
+      run: |
+        PROJECT_NAME=$(node -p "require('./package.json').name")
+        DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
+        cd $DEPLOY_DIR
+        npm install --only=production
+    
+    - name: Create .env file
+      run: |
+        PROJECT_NAME=$(node -p "require('./package.json').name")
+        DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
+        echo "Creating .env file"
+        echo "DEV_APP_PORT=${{ secrets.DEV_APP_PORT }}" >> $DEPLOY_DIR/.env
+        echo "PRO_APP_PORT=${{ secrets.PRO_APP_PORT }}" >> $DEPLOY_DIR/.env
+        echo "PRINTER_NAME=\"${{ secrets.PRINTER_NAME }}\"" >> $DEPLOY_DIR/.env
+        echo "PRINTER_NAME_SIZE_WIDTH=\"${{ secrets.PRINTER_NAME_SIZE_WIDTH }}\"" >> $DEPLOY_DIR/.env
+        echo "PRINTER_NAME_SIZE_HEIGHT=\"${{ secrets.PRINTER_NAME_SIZE_HEIGHT }}\"" >> $DEPLOY_DIR/.env
+        echo "VIETQR_API_URL=\"${{ secrets.VIETQR_API_URL }}\"" >> $DEPLOY_DIR/.env
+        echo "VIETQR_DEFAULT_TEMPLATE=\"${{ secrets.VIETQR_DEFAULT_TEMPLATE }}\"" >> $DEPLOY_DIR/.env
+        echo "TEMPORARY_FOLDER=${{ secrets.TEMPORARY_FOLDER }}" >> $DEPLOY_DIR/.env
+        echo "ASSETS_FOLDER=${{ secrets.ASSETS_FOLDER }}" >> $DEPLOY_DIR/.env
+        echo "PAYMENT_ACCOUNT_HOLDER_BANK_ID=\"${{ secrets.PAYMENT_ACCOUNT_HOLDER_BANK_ID }}\"" >> $DEPLOY_DIR/.env
+        echo "PAYMENT_ACCOUNT_HOLDER_ACCOUNT_NO=\"${{ secrets.PAYMENT_ACCOUNT_HOLDER_ACCOUNT_NO }}\"" >> $DEPLOY_DIR/.env
+        echo "PAYMENT_ACCOUNT_HOLDER_ACCOUNT_NAME=\"${{ secrets.PAYMENT_ACCOUNT_HOLDER_ACCOUNT_NAME }}\"" >> $DEPLOY_DIR/.env
+        echo "BRAND_INFO_NAME=\"${{ secrets.BRAND_INFO_NAME }}\"" >> $DEPLOY_DIR/.env
+        echo "BRAND_INFO_ADDRESS=\"${{ secrets.BRAND_INFO_ADDRESS }}\"" >> $DEPLOY_DIR/.env
+        echo "BRAND_INFO_PHONE=\"${{ secrets.BRAND_INFO_PHONE }}\"" >> $DEPLOY_DIR/.env
+        echo "BRAND_INFO_EMAIL=\"${{ secrets.BRAND_INFO_EMAIL }}\"" >> $DEPLOY_DIR/.env
+        echo "BRAND_INFO_FANPAGE=\"${{ secrets.BRAND_INFO_FANPAGE }}\"" >> $DEPLOY_DIR/.env
+        echo "BRAND_INFO_WEBSITE=\"${{ secrets.BRAND_INFO_WEBSITE }}\"" >> $DEPLOY_DIR/.env
+
+    - name: Check and start pm2 process
+      run: |
+        PROJECT_NAME=$(node -p "require('./package.json').name")
+        DEPLOY_DIR="/var/www/back-end/$PROJECT_NAME"
+        cd $DEPLOY_DIR
+        RUNNING=$(pm2 list | grep -c $PROJECT_NAME)
+        if [ "${RUNNING}" -ne 0 ]; then
+          pm2 restart $PROJECT_NAME
+        else
+          pm2 start "npm run start:prod:linux" --name $PROJECT_NAME
+        fi
+        pm2 save
