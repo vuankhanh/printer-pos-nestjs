@@ -7,6 +7,7 @@ import { PrinterModule } from './module/printer/printer.module';
   imports: [
     ConfigModule.forRoot({
       load: [configuration],
+      envFilePath: '.env', //Phải định nghĩa mặc định ở đây vì khi chạy pm2 thì location (the project root directory) sẽ khác
     }),
 
     PrinterModule
