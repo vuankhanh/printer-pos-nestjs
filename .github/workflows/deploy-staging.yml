@@ -24,6 +24,18 @@ jobs:
     - name: Build project
       run: npm run build
 
+    - name: Check and create Back-End folder
+      run: |
+        DEPLOY_DIR="/var/www/back-end"
+        if [ -d "$DEPLOY_DIR" ]; then
+          echo "Directory exists."
+          echo "${{ secrets.STAGING_VAK_TP550LA_SUDO_PASSWORD }}" | sudo -S chown -R $USER:$USER $DEPLOY_DIR
+        else
+          echo "Directory does not exist."
+          echo "${{ secrets.STAGING_VAK_TP550LA_SUDO_PASSWORD }}" | sudo -S mkdir -p $DEPLOY_DIR
+          echo "${{ secrets.STAGING_VAK_TP550LA_SUDO_PASSWORD }}" | sudo -S chown -R $USER:$USER $DEPLOY_DIR
+        fi
+
     - name: Check and replace files
       run: |
         PROJECT_NAME=$(node -p "require('./package.json').name")
@@ -43,7 +55,7 @@ jobs:
 
         else
           echo "Directory does not exist."
-          echo "${{ secrets.STAGING_VAK_TP550LA_SUDO_PASSWORD }}" | sudo -S mkdir -p $DEPLOY_DIR
+          mkdir -p $DEPLOY_DIR
           cp -r dist $DEPLOY_DIR
           cp -r ASSETS $DEPLOY_DIR
           cp package.json $DEPLOY_DIR
