@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 import { PdfService } from './pdf/pdf.service';
 import { Template } from 'src/shared/interface/template.interface';
 import { FileUtil } from 'src/shared/utitl/file.util';
+import { CustomInternalServerErrorException } from 'src/shared/exception/custom-exception';
 
 @Injectable()
 export class PrinterService {
@@ -19,15 +20,24 @@ export class PrinterService {
     const assetsFolder = this.configService.get<string>('folder.assets');
     
     const htmlFile = assetsFolder+`/template/template_${temp.order.customerPhoneNumber  ? 'default' : 'walk_in_customer'}.html` 
-
-    const readHtml = await FileUtil.read(htmlFile); 
-    const result = await this.pdfService.createPdfFromHTML(readHtml, temp);
-    
-    await this.printPdf(result.filePath, printerName).then(async _ => {
-      await FileUtil.remove(result.filePath);
-    });
-
-    return result.buffer;
+    try {
+      const readHtml = await FileUtil.read(htmlFile); 
+      try {
+        const result = await this.pdfService.createPdfFromHTML(readHtml, temp);
+        try {
+          await this.printPdf(result.filePath, printerName).then(async _ => {
+            await FileUtil.remove(result.filePath);
+          });
+          return result.buffer;
+        } catch (error) {
+          throw new CustomInternalServerErrorException(`Lỗi khi in file pdf - ${error.message}`);
+        }
+      } catch (error) {
+        throw new CustomInternalServerErrorException(`Lỗi khi tạo file pdf - ${error.message}`);
+      }
+    } catch (error) {
+      throw new CustomInternalServerErrorException(`Lỗi khi đọc file html - ${error.message}`);
+    }
   }
 
   private printPdf(pdfPath: string, printerName: string) {
@@ -43,7 +53,7 @@ export class PrinterService {
   }
 
   printPdfWindows(pdfPath: string, printerName: string) {
-    return print.print(pdfPath, { printer: printerName });
+    return print.print(pdfPath, { printer: printerName })
   }
 
   printPdfLinux(pdfPath: string, printerName: string) {
@@ -52,7 +62,7 @@ export class PrinterService {
       const command = `lp -d ${printerName} ${pdfPath}`
       exec(command, (error, stdout, stderr) => {
         if (error) {
-          reject(`Error printing file: ${stderr}`);
+          reject(`${error.message} - ${stderr}`);
         } else {
           resolve(stdout);
         }

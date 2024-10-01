@@ -16,12 +16,7 @@ export class PrinterController {
   async print(@Body('order') orderDto: OrderDto) {
     const footer: IFooterTemplate = this.configService.get<IFooterTemplate>('brand');
     const template: Template = new Template(orderDto, footer);
-    
-    try {
-      const pdf = await this.printerService.print(template);
-      return pdf;
-    } catch (error) {
-      throw error;
-    }
+    const pdf = await this.printerService.print(template);
+    return pdf;
   }
 }
