@@ -29,7 +29,9 @@ export class PdfService {
     filePath: string
   }> {
     // Khởi tạo trình duyệt Puppeteer
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: true
+    });
     const page = await browser.newPage();
     try {
 
